@@ -1,22 +1,28 @@
-import { useNavigate } from "react-router-dom";
+import { Form, useNavigate, useNavigation } from "react-router-dom";
 
 import classes from "./EventForm.module.css";
 
 function EventForm({ method, event }) {
   const navigate = useNavigate();
+  const navigation = useNavigation();
+
+  const isSubmitting = navigation.state === 'submitting';
+
   function cancelHandler() {
     navigate("..");
   }
 
   // defaultValue - provided by React
+  // if used special Form component - form does not submitting, but request "method: post" not automatically submit.
+  // Instead pass "method: post" to action
   return (
-    <form className={classes.form}>
+    <Form method='POST' className={classes.form}>
       <p>
         <label htmlFor="title">Title</label>
         <input
           id="title"
           type="text"
-          name="title"
+          name="title" //must be set for using react-router
           required
           defaultValue={event ? event.title : ""}
         />
@@ -26,7 +32,7 @@ function EventForm({ method, event }) {
         <input
           id="image"
           type="url"
-          name="image"
+          name="image"//must be set for using react-router
           required
           defaultValue={event ? event.image : ""}
         />
@@ -36,7 +42,7 @@ function EventForm({ method, event }) {
         <input
           id="date"
           type="date"
-          name="date"
+          name="date"//must be set for using react-router
           required
           defaultValue={event ? event.date : ""}
         />
@@ -45,7 +51,7 @@ function EventForm({ method, event }) {
         <label htmlFor="description">Description</label>
         <textarea
           id="description"
-          name="description"
+          name="description"//must be set for using react-router
           rows="5"
           required
           defaultValue={event ? event.description : ""}
@@ -55,9 +61,9 @@ function EventForm({ method, event }) {
         <button type="button" onClick={cancelHandler}>
           Cancel
         </button>
-        <button>Save</button>
+        <button disabled={isSubmitting}>{isSubmitting ? 'Submitting...' : 'Save'}</button>
       </div>
-    </form>
+    </Form>
   );
 }
 

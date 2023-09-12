@@ -2,14 +2,17 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import RootLayout from "./pages/Root";
 import HomePage from "./pages/Home";
-import EventsPage, { loader as eventsLoader } from "./pages/Events";
+import EventsPage, {
+  loader as eventsLoader,
+} from "./pages/Events";
 import EventDetailPage, {
   loader as eventDetailLoader,
+  action as deleteEventAction,
 } from "./pages/EventDetail";
-import NewEventPage from "./pages/NewEvent";
+import NewEventPage, { action as newEventAction } from "./pages/NewEvent";
 import EditEventPage from "./pages/EditEvent";
 import EventsRootLayout from "./pages/EventsRoot";
-import ErrorPage from "./Error";
+import ErrorPage from "./pages/Error";
 // Challenge / Exercise
 
 // 1. Add five new (dummy) page components (content can be simple <h1> elements)
@@ -50,17 +53,22 @@ const router = createBrowserRouter([
           },
           {
             path: ":eventId",
-            id: 'event-detail',
+            id: "event-detail",
             loader: eventDetailLoader,
             children: [
               {
                 index: true,
                 element: <EventDetailPage />,
+                action: deleteEventAction,
               },
               { path: "edit", element: <EditEventPage /> },
             ],
           },
-          { path: "new", element: <NewEventPage /> },
+          {
+            path: "new",
+            element: <NewEventPage />,
+            action: newEventAction,
+          },
         ],
       },
     ],
