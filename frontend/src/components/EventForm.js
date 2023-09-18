@@ -1,12 +1,20 @@
-import { Form, useNavigate, useNavigation } from "react-router-dom";
+import {
+  Form,
+  useNavigate,
+  useNavigation,
+  useActionData,
+  json,
+  redirect,
+} from "react-router-dom";
 
 import classes from "./EventForm.module.css";
 
 function EventForm({ method, event }) {
+  const data = useActionData();
   const navigate = useNavigate();
   const navigation = useNavigation();
 
-  const isSubmitting = navigation.state === 'submitting';
+  const isSubmitting = navigation.state === "submitting";
 
   function cancelHandler() {
     navigate("..");
@@ -16,7 +24,14 @@ function EventForm({ method, event }) {
   // if used special Form component - form does not submitting, but request "method: post" not automatically submit.
   // Instead pass "method: post" to action
   return (
-    <Form method='POST' className={classes.form}>
+    <Form method={method} className={classes.form}>
+      {data && data.errors && (
+        <ul>
+          {Object.values(data.errors).map((err) => (
+            <li key={err}>{err}</li>
+          ))}
+        </ul>
+      )}
       <p>
         <label htmlFor="title">Title</label>
         <input
@@ -32,7 +47,7 @@ function EventForm({ method, event }) {
         <input
           id="image"
           type="url"
-          name="image"//must be set for using react-router
+          name="image" //must be set for using react-router
           required
           defaultValue={event ? event.image : ""}
         />
@@ -42,7 +57,7 @@ function EventForm({ method, event }) {
         <input
           id="date"
           type="date"
-          name="date"//must be set for using react-router
+          name="date" //must be set for using react-router
           required
           defaultValue={event ? event.date : ""}
         />
@@ -51,7 +66,7 @@ function EventForm({ method, event }) {
         <label htmlFor="description">Description</label>
         <textarea
           id="description"
-          name="description"//must be set for using react-router
+          name="description" //must be set for using react-router
           rows="5"
           required
           defaultValue={event ? event.description : ""}
@@ -61,10 +76,51 @@ function EventForm({ method, event }) {
         <button type="button" onClick={cancelHandler}>
           Cancel
         </button>
-        <button disabled={isSubmitting}>{isSubmitting ? 'Submitting...' : 'Save'}</button>
+        <button disabled={isSubmitting}>
+          {isSubmitting ? "Submitting..." : "Save"}
+        </button>
       </div>
     </Form>
   );
 }
 
 export default EventForm;
+
+// код нижче виконується в браузері, це не код бекенду.
+//Тут можна отримати доступ до будь-якої функції браузера, наприклад localStorage
+export const action = async ({ request, params }) => {
+  const method = request.method;
+  const data = await request.formData();
+
+  const eventData = {
+    title: data.get("title"),
+    image: data.get("image"),
+    date: data.get("date"),
+    description: data.get("description"),
+  };
+
+  let url = "http://localhost:8080/events"; //If Create NewEvent
+
+  if (method === "PATCH") {
+    const eventId = params.eventId;
+    url = "http://localhost:8080/events/" + eventId;
+  }
+
+  const response = await fetch(url, {
+    method: method,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(eventData),
+  });
+  // 422 validation status from backend
+  if (response.status === 422) {
+    return response;
+  }
+
+  if (!response.ok) {
+    throw json({ message: "Could not save event." }, { status: 500 });
+  }
+
+  return redirect("/events");
+};
